@@ -161,6 +161,7 @@ def refresh_token(body: RefreshTokenRequest, db: DbSession):
     return _success(
         "Token refreshed successfully",
         {
+            "token": new_access_token,
             "access_token": new_access_token,
             "refresh_token": new_refresh_token,
             "token_type": "bearer",

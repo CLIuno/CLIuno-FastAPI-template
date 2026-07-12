@@ -95,8 +95,9 @@ class OtpRequest(BaseModel):
 
 
 class ChangePasswordRequest(BaseModel):
-    current_password: str
-    new_password: str
+    # Frontends send oldPassword/newPassword; snake_case is kept for API/test compatibility
+    current_password: str = Field(validation_alias=AliasChoices("current_password", "oldPassword"))
+    new_password: str = Field(validation_alias=AliasChoices("new_password", "newPassword"))
 
 
 class TokenResponse(BaseModel):
@@ -106,7 +107,8 @@ class TokenResponse(BaseModel):
 
 
 class RefreshTokenRequest(BaseModel):
-    refresh_token: str
+    # Frontends send refreshToken; snake_case is kept for API/test compatibility
+    refresh_token: str = Field(validation_alias=AliasChoices("refresh_token", "refreshToken"))
 
 
 class CheckTokenRequest(BaseModel):
