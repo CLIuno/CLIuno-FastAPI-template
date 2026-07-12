@@ -6,7 +6,7 @@ class TestCurrentUser:
         res = client.get("/api/v1/users/current",
                          headers=auth_header(user_token))
         assert res.status_code == 200
-        assert res.json()["data"]["username"] == "testuser"
+        assert res.json()["data"]["user"]["username"] == "testuser"
 
     def test_get_current_user_unauthenticated(self, client):
         res = client.get("/api/v1/users/current")
@@ -18,14 +18,14 @@ class TestCurrentUser:
             "last_name": "Name",
         }, headers=auth_header(user_token))
         assert res.status_code == 200
-        assert res.json()["data"]["first_name"] == "Updated"
+        assert res.json()["data"]["user"]["first_name"] == "Updated"
 
     def test_update_current_user_phone(self, client, user_token):
         res = client.patch("/api/v1/users/current", json={
             "phone": "1234567890",
         }, headers=auth_header(user_token))
         assert res.status_code == 200
-        assert res.json()["data"]["phone"] == "1234567890"
+        assert res.json()["data"]["user"]["phone"] == "1234567890"
 
     def test_delete_current_user(self, client, user_token):
         res = client.delete("/api/v1/users/current",
@@ -38,7 +38,7 @@ class TestUserByUsername:
     def test_get_by_username(self, client, regular_user, user_token):
         res = client.get("/api/v1/users/username/testuser")
         assert res.status_code == 200
-        assert res.json()["data"]["email"] == "test@test.com"
+        assert res.json()["data"]["user"]["email"] == "test@test.com"
 
     def test_get_by_username_not_found(self, client, user_role):
         res = client.get("/api/v1/users/username/nobody")
@@ -46,32 +46,34 @@ class TestUserByUsername:
 
 
 class TestUserPosts:
-    def test_get_current_user_posts(self, client, user_token):
-        res = client.get("/api/v1/users/posts",
+    def test_get_user_posts(self, client, user_token, regular_user):
+        res = client.get(f"/api/v1/users/{regular_user.id}/posts",
                          headers=auth_header(user_token))
         assert res.status_code == 200
 
-    def test_get_current_user_role(self, client, user_token, regular_user):
-        res = client.get("/api/v1/users/role", headers=auth_header(user_token))
+    def test_get_user_role(self, client, user_token, regular_user):
+        res = client.get(
+            f"/api/v1/users/{regular_user.id}/roles", headers=auth_header(user_token))
         assert res.status_code == 200
-        assert res.json()["data"]["name"] == "user"
+        assert res.json()["data"]["role"]["name"] == "user"
 
 
 class TestAdminUserOps:
     def test_list_users(self, client, admin_token, regular_user):
         res = client.get("/api/v1/users", headers=auth_header(admin_token))
         assert res.status_code == 200
-        assert isinstance(res.json()["data"], list)
+        assert isinstance(res.json()["data"]["users"], list)
 
-    def test_list_users_forbidden(self, client, user_token):
+    def test_list_users_as_regular_user(self, client, user_token):
+        # Any authenticated user may list users (the frontend users page relies on it)
         res = client.get("/api/v1/users", headers=auth_header(user_token))
-        assert res.status_code == 403
+        assert res.status_code == 200
 
     def test_get_user_by_id(self, client, admin_token, regular_user):
         res = client.get(
             f"/api/v1/users/{regular_user.id}", headers=auth_header(admin_token))
         assert res.status_code == 200
-        assert res.json()["data"]["username"] == "testuser"
+        assert res.json()["data"]["user"]["username"] == "testuser"
 
     def test_get_user_not_found(self, client, admin_token):
         res = client.get("/api/v1/users/nonexistent-id",
@@ -83,7 +85,7 @@ class TestAdminUserOps:
             "first_name": "AdminUpdated",
         }, headers=auth_header(admin_token))
         assert res.status_code == 200
-        assert res.json()["data"]["first_name"] == "AdminUpdated"
+        assert res.json()["data"]["user"]["first_name"] == "AdminUpdated"
 
     def test_admin_delete_user(self, client, admin_token, regular_user):
         res = client.delete(

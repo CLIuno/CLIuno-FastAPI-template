@@ -25,13 +25,13 @@ def _todo_dict(todo: Todo) -> dict:
 @router.get("")
 def list_todos(current_user: CurrentUser, db: DbSession):
     todos = db.query(Todo).all()
-    return _success("Todos retrieved", [_todo_dict(t) for t in todos])
+    return _success("Todos retrieved", {"todos": [_todo_dict(t) for t in todos]})
 
 
 @router.get("/current-user")
 def current_user_todos(current_user: CurrentUser, db: DbSession):
     todos = db.query(Todo).filter(Todo.user_id == current_user.id).all()
-    return _success("User todos retrieved", [_todo_dict(t) for t in todos])
+    return _success("User todos retrieved", {"todos": [_todo_dict(t) for t in todos]})
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -47,7 +47,7 @@ def create_todo(body: dict, current_user: CurrentUser, db: DbSession):
     db.add(todo)
     db.commit()
     db.refresh(todo)
-    return _success("Todo created successfully", _todo_dict(todo))
+    return _success("Todo created successfully", {"todo": _todo_dict(todo)})
 
 
 @router.get("/{todo_id}")
@@ -55,7 +55,7 @@ def get_todo(todo_id: str, current_user: CurrentUser, db: DbSession):
     todo = db.query(Todo).filter(Todo.id == todo_id).first()
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
-    return _success("Todo retrieved", _todo_dict(todo))
+    return _success("Todo retrieved", {"todo": _todo_dict(todo)})
 
 
 @router.patch("/{todo_id}")
@@ -73,7 +73,7 @@ def update_todo(todo_id: str, body: dict, current_user: CurrentUser, db: DbSessi
         todo.completed = body["completed"]
     db.commit()
     db.refresh(todo)
-    return _success("Todo updated successfully", _todo_dict(todo))
+    return _success("Todo updated successfully", {"todo": _todo_dict(todo)})
 
 
 @router.delete("/{todo_id}")
@@ -98,4 +98,4 @@ def toggle_todo(todo_id: str, current_user: CurrentUser, db: DbSession):
     todo.completed = not todo.completed
     db.commit()
     db.refresh(todo)
-    return _success("Todo toggled successfully", _todo_dict(todo))
+    return _success("Todo toggled successfully", {"todo": _todo_dict(todo)})

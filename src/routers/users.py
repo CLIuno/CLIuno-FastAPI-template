@@ -30,7 +30,7 @@ def _user_dict(user: User) -> dict:
 
 @router.get("/current")
 def get_current_user(current_user: CurrentUser):
-    return _success("Current user retrieved", _user_dict(current_user))
+    return _success("Current user retrieved", {"user": _user_dict(current_user)})
 
 
 @router.patch("/current")
@@ -47,7 +47,7 @@ def update_current_user(body: UserUpdate, current_user: CurrentUser, db: DbSessi
         current_user.phone = body.phone
     db.commit()
     db.refresh(current_user)
-    return _success("User updated successfully", _user_dict(current_user))
+    return _success("User updated successfully", {"user": _user_dict(current_user)})
 
 
 @router.delete("/current")
@@ -63,11 +63,14 @@ def get_by_username(username: str, db: DbSession):
     user = db.query(User).filter(User.username == username, User.is_deleted == False).first()  # noqa: E712
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return _success("User retrieved", _user_dict(user))
+    return _success("User retrieved", {"user": _user_dict(user)})
 
 
-@router.get("/posts")
-def get_current_user_posts(current_user: CurrentUser):
+@router.get("/{user_id}/posts")
+def get_user_posts(user_id: str, current_user: CurrentUser, db: DbSession):
+    user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()  # noqa: E712
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     posts = [
         {
             "id": p.id,
@@ -77,29 +80,36 @@ def get_current_user_posts(current_user: CurrentUser):
             "created_at": str(p.created_at),
             "updated_at": str(p.updated_at),
         }
-        for p in current_user.posts
+        for p in user.posts
     ]
-    return _success("User posts retrieved", posts)
+    return _success("User posts retrieved", {"posts": posts})
 
 
-@router.get("/role")
-def get_current_user_role(current_user: CurrentUser):
-    role = current_user.role
-    return _success("User role retrieved", {"id": role.id, "name": role.name})
+@router.get("/{user_id}/roles")
+def get_user_roles(user_id: str, current_user: CurrentUser, db: DbSession):
+    user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()  # noqa: E712
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    role = user.role
+    return _success(
+        "User role retrieved",
+        {"role": {"id": role.id, "name": role.name} if role else None},
+    )
 
 
 @router.get("")
-def list_users(admin: CurrentAdmin, db: DbSession):
+def list_users(current_user: CurrentUser, db: DbSession):
+    # Any authenticated user may list users (the frontend users page relies on it)
     users = db.query(User).filter(User.is_deleted == False).all()  # noqa: E712
-    return _success("Users retrieved", [_user_dict(u) for u in users])
+    return _success("Users retrieved", {"users": [_user_dict(u) for u in users]})
 
 
 @router.get("/{user_id}")
-def get_user(user_id: str, admin: CurrentAdmin, db: DbSession):
+def get_user(user_id: str, current_user: CurrentUser, db: DbSession):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return _success("User retrieved", _user_dict(user))
+    return _success("User retrieved", {"user": _user_dict(user)})
 
 
 @router.patch("/{user_id}")
@@ -117,7 +127,7 @@ def admin_update_user(user_id: str, body: AdminUserUpdate, admin: CurrentAdmin, 
         user.role_id = body.role_id
     db.commit()
     db.refresh(user)
-    return _success("User updated successfully", _user_dict(user))
+    return _success("User updated successfully", {"user": _user_dict(user)})
 
 
 @router.delete("/{user_id}")

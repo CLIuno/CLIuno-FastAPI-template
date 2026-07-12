@@ -47,13 +47,13 @@ def _post_dict(post: Post, include_user: bool = False, include_comments: bool = 
 def list_posts(db: DbSession):
     posts = db.query(Post).options(joinedload(Post.user),
                                    joinedload(Post.comments)).all()
-    return _success("Posts retrieved", [_post_dict(p, include_user=True, include_comments=True) for p in posts])
+    return _success("Posts retrieved", {"posts": [_post_dict(p, include_user=True, include_comments=True) for p in posts]})
 
 
 @router.get("/current-user")
 def current_user_posts(current_user: CurrentUser, db: DbSession):
     posts = db.query(Post).filter(Post.user_id == current_user.id).all()
-    return _success("User posts retrieved", [_post_dict(p) for p in posts])
+    return _success("User posts retrieved", {"posts": [_post_dict(p) for p in posts]})
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -66,7 +66,7 @@ def create_post(body: dict, current_user: CurrentUser, db: DbSession):
     db.add(post)
     db.commit()
     db.refresh(post)
-    return _success("Post created successfully", _post_dict(post))
+    return _success("Post created successfully", {"post": _post_dict(post)})
 
 
 @router.get("/{post_id}")
@@ -79,7 +79,7 @@ def get_post(post_id: str, db: DbSession):
     )
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    return _success("Post retrieved", _post_dict(post, include_user=True, include_comments=True))
+    return _success("Post retrieved", {"post": _post_dict(post, include_user=True, include_comments=True)})
 
 
 @router.patch("/{post_id}")
@@ -95,7 +95,7 @@ def update_post(post_id: str, body: dict, current_user: CurrentUser, db: DbSessi
         post.content = body["content"]
     db.commit()
     db.refresh(post)
-    return _success("Post updated successfully", _post_dict(post))
+    return _success("Post updated successfully", {"post": _post_dict(post)})
 
 
 @router.delete("/{post_id}")
@@ -120,10 +120,12 @@ def get_post_author(post_id: str, db: DbSession):
     return _success(
         "Post author retrieved",
         {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            }
         },
     )

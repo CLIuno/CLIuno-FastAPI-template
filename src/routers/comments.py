@@ -27,7 +27,7 @@ def list_comments(post_id: str, db: DbSession):
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     comments = db.query(Comment).filter(Comment.post_id == post_id).all()
-    return _success("Comments retrieved", [_comment_dict(c) for c in comments])
+    return _success("Comments retrieved", {"comments": [_comment_dict(c) for c in comments]})
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -43,7 +43,7 @@ def create_comment(post_id: str, body: dict, current_user: CurrentUser, db: DbSe
     db.add(comment)
     db.commit()
     db.refresh(comment)
-    return _success("Comment created successfully", _comment_dict(comment))
+    return _success("Comment created successfully", {"comment": _comment_dict(comment)})
 
 
 @router.patch("/{comment_id}")
@@ -63,7 +63,7 @@ def update_comment(
         comment.content = content
     db.commit()
     db.refresh(comment)
-    return _success("Comment updated successfully", _comment_dict(comment))
+    return _success("Comment updated successfully", {"comment": _comment_dict(comment)})
 
 
 @router.delete("/{comment_id}")

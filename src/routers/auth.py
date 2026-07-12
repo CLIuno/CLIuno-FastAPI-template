@@ -41,9 +41,13 @@ def register(body: UserCreate, db: DbSession):
         raise HTTPException(
             status_code=400, detail="Password must be at least 6 characters")
 
+    # Default role is created on first use so a fresh install works out of the box
     user_role = db.query(Role).filter(Role.name == "user").first()
     if not user_role:
-        raise HTTPException(status_code=500, detail="Default role not found")
+        user_role = Role(name="user")
+        db.add(user_role)
+        db.commit()
+        db.refresh(user_role)
 
     user = User(
         username=body.username,
@@ -109,6 +113,7 @@ def login(body: LoginRequest, db: DbSession):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
             },
+            "token": access_token,
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",

@@ -41,15 +41,15 @@ class TestFollows:
             f"/api/v1/follows/{second_user.id}/follow", headers=auth_header(user_token))
         res = client.get(f"/api/v1/follows/{second_user.id}/followers")
         assert res.status_code == 200
-        assert len(res.json()["data"]) == 1
-        assert res.json()["data"][0]["username"] == "testuser"
+        assert len(res.json()["data"]["followers"]) == 1
+        assert res.json()["data"]["followers"][0]["username"] == "testuser"
 
     def test_get_following(self, client, user_token, second_user, regular_user):
         client.post(
             f"/api/v1/follows/{second_user.id}/follow", headers=auth_header(user_token))
         res = client.get(f"/api/v1/follows/{regular_user.id}/following")
         assert res.status_code == 200
-        assert len(res.json()["data"]) == 1
+        assert len(res.json()["data"]["following"]) == 1
 
     def test_is_following_true(self, client, user_token, second_user):
         client.post(
@@ -57,10 +57,10 @@ class TestFollows:
         res = client.get(
             f"/api/v1/follows/{second_user.id}/is-following", headers=auth_header(user_token))
         assert res.status_code == 200
-        assert res.json()["data"]["is_following"] is True
+        assert res.json()["data"]["isFollowing"] is True
 
     def test_is_following_false(self, client, user_token, second_user):
         res = client.get(
             f"/api/v1/follows/{second_user.id}/is-following", headers=auth_header(user_token))
         assert res.status_code == 200
-        assert res.json()["data"]["is_following"] is False
+        assert res.json()["data"]["isFollowing"] is False

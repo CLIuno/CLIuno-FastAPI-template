@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 
 
 # --- Generic Response ---
@@ -72,7 +72,8 @@ class UserWithRole(UserOut):
 
 # --- Auth ---
 class LoginRequest(BaseModel):
-    login: str
+    # Frontends send `usernameOrEmail`; `login` is kept for API/test compatibility
+    login: str = Field(validation_alias=AliasChoices("login", "usernameOrEmail"))
     password: str
 
 

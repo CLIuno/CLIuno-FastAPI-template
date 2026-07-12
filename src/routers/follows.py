@@ -60,16 +60,18 @@ def get_followers(user_id: str, db: DbSession):
         follower_ids)).all() if follower_ids else []
     return _success(
         "Followers retrieved",
-        [
-            {
-                "id": u.id,
-                "username": u.username,
-                "email": u.email,
-                "first_name": u.first_name,
-                "last_name": u.last_name,
-            }
-            for u in users
-        ],
+        {
+            "followers": [
+                {
+                    "id": u.id,
+                    "username": u.username,
+                    "email": u.email,
+                    "first_name": u.first_name,
+                    "last_name": u.last_name,
+                }
+                for u in users
+            ]
+        },
     )
 
 
@@ -84,16 +86,18 @@ def get_following(user_id: str, db: DbSession):
                                   ).all() if following_ids else []
     return _success(
         "Following retrieved",
-        [
-            {
-                "id": u.id,
-                "username": u.username,
-                "email": u.email,
-                "first_name": u.first_name,
-                "last_name": u.last_name,
-            }
-            for u in users
-        ],
+        {
+            "following": [
+                {
+                    "id": u.id,
+                    "username": u.username,
+                    "email": u.email,
+                    "first_name": u.first_name,
+                    "last_name": u.last_name,
+                }
+                for u in users
+            ]
+        },
     )
 
 
@@ -104,4 +108,4 @@ def is_following(user_id: str, current_user: CurrentUser, db: DbSession):
         .filter(Follow.follower_id == current_user.id, Follow.following_id == user_id)
         .first()
     )
-    return _success("Follow status retrieved", {"is_following": follow is not None})
+    return _success("Follow status retrieved", {"isFollowing": follow is not None})
