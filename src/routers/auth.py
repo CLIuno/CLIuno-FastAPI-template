@@ -1,15 +1,23 @@
 
+import secrets
+
+import pyotp
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
+from src.config import settings
 from src.dependencies.auth import CurrentUser, DbSession
 from src.models.models import BlacklistedToken, Role, User
 from src.schemas.schemas import (
     ChangePasswordRequest,
     CheckTokenRequest,
+    ForgotPasswordRequest,
     LoginRequest,
+    OtpRequest,
     RefreshTokenRequest,
+    ResetPasswordRequest,
     UserCreate,
+    VerifyEmailRequest,
 )
 from src.services.auth_service import (
     create_access_token,
@@ -202,3 +210,89 @@ def change_password(body: ChangePasswordRequest, current_user: CurrentUser, db: 
     current_user.hashed_password = hash_password(body.new_password)
     db.commit()
     return _success("Password changed successfully")
+
+
+@router.post("/forgot-password")
+def forgot_password(body: ForgotPasswordRequest, db: DbSession):
+    user = db.query(User).filter(User.email == body.email, User.is_deleted == False).first()  # noqa: E712
+    if user:
+        user.reset_token = secrets.token_urlsafe(32)
+        db.commit()
+        # In production, email the token; templates keep it local to the database.
+    return _success("If the email exists, a reset link has been sent")
+
+
+@router.post("/reset-password")
+def reset_password(body: ResetPasswordRequest, db: DbSession):
+    user = db.query(User).filter(User.reset_token == body.token).first() if body.token else None
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    if len(body.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    user.hashed_password = hash_password(body.password)
+    user.reset_token = None
+    db.commit()
+    return _success("Password has been reset successfully")
+
+
+@router.post("/send-verify-email")
+def send_verify_email(current_user: CurrentUser, db: DbSession):
+    current_user.verify_token = secrets.token_urlsafe(32)
+    db.commit()
+    # In production, email the token; templates keep it local to the database.
+    return _success("Verification email sent")
+
+
+@router.post("/verify-email")
+def verify_email(body: VerifyEmailRequest, db: DbSession):
+    user = db.query(User).filter(User.verify_token == body.token).first() if body.token else None
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+
+    user.is_verified = True
+    user.verify_token = None
+    db.commit()
+    return _success("Email verified successfully")
+
+
+@router.post("/otp/generate")
+def otp_generate(current_user: CurrentUser, db: DbSession):
+    secret = pyotp.random_base32()
+    current_user.otp_secret = secret
+    current_user.is_otp_enabled = False
+    db.commit()
+
+    otpauth_url = pyotp.TOTP(secret).provisioning_uri(
+        name=current_user.username, issuer_name=settings.APP_NAME)
+    return _success("OTP secret generated", {"secret": secret, "otpauth_url": otpauth_url})
+
+
+@router.post("/otp/verify")
+def otp_verify(body: OtpRequest, current_user: CurrentUser, db: DbSession):
+    if not current_user.otp_secret:
+        raise HTTPException(status_code=400, detail="OTP is not set up")
+    if not pyotp.TOTP(current_user.otp_secret).verify(body.otp, valid_window=1):
+        raise HTTPException(status_code=401, detail="Invalid OTP code")
+
+    current_user.is_otp_enabled = True
+    db.commit()
+    return _success("OTP enabled successfully")
+
+
+@router.post("/otp/validate")
+def otp_validate(body: OtpRequest, current_user: CurrentUser):
+    if not current_user.otp_secret:
+        raise HTTPException(status_code=400, detail="OTP is not set up")
+    if not pyotp.TOTP(current_user.otp_secret).verify(body.otp, valid_window=1):
+        raise HTTPException(status_code=401, detail="Invalid OTP code")
+
+    return _success("OTP is valid")
+
+
+@router.post("/otp/disable")
+def otp_disable(current_user: CurrentUser, db: DbSession):
+    current_user.otp_secret = None
+    current_user.is_otp_enabled = False
+    db.commit()
+    return _success("OTP disabled successfully")

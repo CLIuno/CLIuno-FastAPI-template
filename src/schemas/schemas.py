@@ -77,6 +77,23 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    password: str
+    token: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class OtpRequest(BaseModel):
+    otp: str
+
+
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str

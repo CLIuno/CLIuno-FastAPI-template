@@ -12,6 +12,7 @@ dependencies = [
     "pydantic[email]>=2.0.0",
     "pydantic-settings>=2.0.0",
     "alembic>=1.14.0",
+    "pyotp>=2.10.0",
 ]
 
 [project.optional-dependencies]
