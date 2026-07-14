@@ -40,8 +40,9 @@ def update_current_user(body: UserUpdate, current_user: CurrentUser, db: DbSessi
     if body.last_name is not None:
         current_user.last_name = body.last_name
     if body.phone is not None:
-        existing = db.query(User).filter(
-            User.phone == body.phone, User.id != current_user.id).first()
+        existing = (
+            db.query(User).filter(User.phone == body.phone, User.id != current_user.id).first()
+        )
         if existing:
             raise HTTPException(status_code=400, detail="Phone already in use")
         current_user.phone = body.phone

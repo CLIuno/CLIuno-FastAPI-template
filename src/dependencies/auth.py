@@ -20,8 +20,7 @@ def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    blacklisted = db.query(BlacklistedToken).filter(
-        BlacklistedToken.token == token).first()
+    blacklisted = db.query(BlacklistedToken).filter(BlacklistedToken.token == token).first()
     if blacklisted:
         raise credentials_exception
 

@@ -25,8 +25,7 @@ def follow_user(user_id: str, current_user: CurrentUser, db: DbSession):
         .first()
     )
     if existing:
-        raise HTTPException(
-            status_code=400, detail="Already following this user")
+        raise HTTPException(status_code=400, detail="Already following this user")
 
     follow = Follow(follower_id=current_user.id, following_id=user_id)
     db.add(follow)
@@ -56,8 +55,7 @@ def get_followers(user_id: str, db: DbSession):
         raise HTTPException(status_code=404, detail="User not found")
     followers = db.query(Follow).filter(Follow.following_id == user_id).all()
     follower_ids = [f.follower_id for f in followers]
-    users = db.query(User).filter(User.id.in_(
-        follower_ids)).all() if follower_ids else []
+    users = db.query(User).filter(User.id.in_(follower_ids)).all() if follower_ids else []
     return _success(
         "Followers retrieved",
         {
@@ -82,8 +80,7 @@ def get_following(user_id: str, db: DbSession):
         raise HTTPException(status_code=404, detail="User not found")
     following = db.query(Follow).filter(Follow.follower_id == user_id).all()
     following_ids = [f.following_id for f in following]
-    users = db.query(User).filter(User.id.in_(following_ids)
-                                  ).all() if following_ids else []
+    users = db.query(User).filter(User.id.in_(following_ids)).all() if following_ids else []
     return _success(
         "Following retrieved",
         {

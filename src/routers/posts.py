@@ -45,9 +45,11 @@ def _post_dict(post: Post, include_user: bool = False, include_comments: bool = 
 
 @router.get("")
 def list_posts(db: DbSession):
-    posts = db.query(Post).options(joinedload(Post.user),
-                                   joinedload(Post.comments)).all()
-    return _success("Posts retrieved", {"posts": [_post_dict(p, include_user=True, include_comments=True) for p in posts]})
+    posts = db.query(Post).options(joinedload(Post.user), joinedload(Post.comments)).all()
+    return _success(
+        "Posts retrieved",
+        {"posts": [_post_dict(p, include_user=True, include_comments=True) for p in posts]},
+    )
 
 
 @router.get("/current-user")
@@ -61,8 +63,7 @@ def create_post(body: dict, current_user: CurrentUser, db: DbSession):
     title = body.get("title")
     if not title:
         raise HTTPException(status_code=400, detail="Title is required")
-    post = Post(title=title, content=body.get(
-        "content"), user_id=current_user.id)
+    post = Post(title=title, content=body.get("content"), user_id=current_user.id)
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -79,7 +80,9 @@ def get_post(post_id: str, db: DbSession):
     )
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    return _success("Post retrieved", {"post": _post_dict(post, include_user=True, include_comments=True)})
+    return _success(
+        "Post retrieved", {"post": _post_dict(post, include_user=True, include_comments=True)}
+    )
 
 
 @router.patch("/{post_id}")
@@ -112,8 +115,7 @@ def delete_post(post_id: str, current_user: CurrentUser, db: DbSession):
 
 @router.get("/{post_id}/user")
 def get_post_author(post_id: str, db: DbSession):
-    post = db.query(Post).options(joinedload(Post.user)
-                                  ).filter(Post.id == post_id).first()
+    post = db.query(Post).options(joinedload(Post.user)).filter(Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     user = post.user

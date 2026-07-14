@@ -1,4 +1,3 @@
-
 import secrets
 
 import pyotp
@@ -46,8 +45,7 @@ def register(body: UserCreate, db: DbSession):
     if body.phone and db.query(User).filter(User.phone == body.phone).first():
         raise HTTPException(status_code=400, detail="Phone already exists")
     if len(body.password) < 6:
-        raise HTTPException(
-            status_code=400, detail="Password must be at least 6 characters")
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
 
     # Default role is created on first use so a fresh install works out of the box
     user_role = db.query(Role).filter(Role.name == "user").first()
@@ -175,8 +173,7 @@ def check_token(body: CheckTokenRequest, db: DbSession):
     if payload is None:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    blacklisted = db.query(BlacklistedToken).filter(
-        BlacklistedToken.token == body.token).first()
+    blacklisted = db.query(BlacklistedToken).filter(BlacklistedToken.token == body.token).first()
     if blacklisted:
         raise HTTPException(status_code=401, detail="Token has been revoked")
 
@@ -202,11 +199,9 @@ def check_token(body: CheckTokenRequest, db: DbSession):
 @router.post("/change-password")
 def change_password(body: ChangePasswordRequest, current_user: CurrentUser, db: DbSession):
     if not verify_password_timing_safe(body.current_password, current_user.hashed_password):
-        raise HTTPException(
-            status_code=400, detail="Current password is incorrect")
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
     if len(body.new_password) < 6:
-        raise HTTPException(
-            status_code=400, detail="New password must be at least 6 characters")
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
 
     current_user.hashed_password = hash_password(body.new_password)
     db.commit()
@@ -265,7 +260,8 @@ def otp_generate(current_user: CurrentUser, db: DbSession):
     db.commit()
 
     otpauth_url = pyotp.TOTP(secret).provisioning_uri(
-        name=current_user.username, issuer_name=settings.APP_NAME)
+        name=current_user.username, issuer_name=settings.APP_NAME
+    )
     return _success("OTP secret generated", {"secret": secret, "otpauth_url": otpauth_url})
 
 

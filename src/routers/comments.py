@@ -38,8 +38,7 @@ def create_comment(post_id: str, body: dict, current_user: CurrentUser, db: DbSe
     content = body.get("content")
     if not content:
         raise HTTPException(status_code=400, detail="Content is required")
-    comment = Comment(
-        content=content, user_id=current_user.id, post_id=post_id)
+    comment = Comment(content=content, user_id=current_user.id, post_id=post_id)
     db.add(comment)
     db.commit()
     db.refresh(comment)
@@ -50,10 +49,7 @@ def create_comment(post_id: str, body: dict, current_user: CurrentUser, db: DbSe
 def update_comment(
     post_id: str, comment_id: str, body: dict, current_user: CurrentUser, db: DbSession
 ):
-    comment = (
-        db.query(Comment).filter(Comment.id == comment_id,
-                                 Comment.post_id == post_id).first()
-    )
+    comment = db.query(Comment).filter(Comment.id == comment_id, Comment.post_id == post_id).first()
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     if comment.user_id != current_user.id and current_user.role.name != "admin":
@@ -68,10 +64,7 @@ def update_comment(
 
 @router.delete("/{comment_id}")
 def delete_comment(post_id: str, comment_id: str, current_user: CurrentUser, db: DbSession):
-    comment = (
-        db.query(Comment).filter(Comment.id == comment_id,
-                                 Comment.post_id == post_id).first()
-    )
+    comment = db.query(Comment).filter(Comment.id == comment_id, Comment.post_id == post_id).first()
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     if comment.user_id != current_user.id and current_user.role.name != "admin":
