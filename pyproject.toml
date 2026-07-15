@@ -3,7 +3,7 @@ name = "cliuno-fastapi-template"
 version = "1.0.0"
 description = "CLIuno FastAPI Template - A production-ready FastAPI REST API template"
 requires-python = ">=3.12"
-license = "MIT"
+license = "AGPL-3.0-only"
 dependencies = [
     "fastapi[standard]>=0.135.0",
     "sqlalchemy>=2.0.0",
