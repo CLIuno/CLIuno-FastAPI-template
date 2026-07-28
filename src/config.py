@@ -3,6 +3,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_NAME: str = "CLIuno FastAPI Template"
+    # Absolute base for uploaded image URLs; falls back to the request origin when unset
+    PUBLIC_BASE_URL: str = ""
     DATABASE_URL: str = "sqlite:///./app.db"
     SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
     REFRESH_SECRET_KEY: str = (

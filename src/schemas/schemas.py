@@ -42,12 +42,14 @@ class UserUpdate(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     phone: str | None = None
+    avatar_url: str | None = None
 
 
 class AdminUserUpdate(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     phone: str | None = None
+    avatar_url: str | None = None
     role_id: str | None = None
 
 
@@ -58,6 +60,7 @@ class UserOut(BaseModel):
     first_name: str
     last_name: str
     phone: str | None = None
+    avatar_url: str | None = None
     role_id: str
     is_deleted: bool
     created_at: datetime
@@ -119,17 +122,25 @@ class CheckTokenRequest(BaseModel):
 class PostCreate(BaseModel):
     title: str
     content: str | None = None
+    # frontends may send either casing; image_url is what goes back out
+    image_url: str | None = Field(
+        default=None, validation_alias=AliasChoices("image_url", "imageUrl")
+    )
 
 
 class PostUpdate(BaseModel):
     title: str | None = None
     content: str | None = None
+    image_url: str | None = Field(
+        default=None, validation_alias=AliasChoices("image_url", "imageUrl")
+    )
 
 
 class PostOut(BaseModel):
     id: str
     title: str
     content: str | None = None
+    image_url: str | None = None
     user_id: str
     created_at: datetime
     updated_at: datetime

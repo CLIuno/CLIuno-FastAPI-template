@@ -21,6 +21,7 @@ def _user_dict(user: User) -> dict:
         "first_name": user.first_name,
         "last_name": user.last_name,
         "phone": user.phone,
+        "avatar_url": user.avatar_url,
         "role_id": user.role_id,
         "is_deleted": user.is_deleted,
         "created_at": str(user.created_at),
@@ -46,6 +47,8 @@ def update_current_user(body: UserUpdate, current_user: CurrentUser, db: DbSessi
         if existing:
             raise HTTPException(status_code=400, detail="Phone already in use")
         current_user.phone = body.phone
+    if body.avatar_url is not None:
+        current_user.avatar_url = body.avatar_url
     db.commit()
     db.refresh(current_user)
     return _success("User updated successfully", {"user": _user_dict(current_user)})

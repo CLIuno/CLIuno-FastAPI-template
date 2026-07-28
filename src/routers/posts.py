@@ -16,6 +16,7 @@ def _post_dict(post: Post, include_user: bool = False, include_comments: bool = 
         "id": post.id,
         "title": post.title,
         "content": post.content,
+        "image_url": post.image_url,
         "user_id": post.user_id,
         "created_at": str(post.created_at),
         "updated_at": str(post.updated_at),
@@ -63,7 +64,13 @@ def create_post(body: dict, current_user: CurrentUser, db: DbSession):
     title = body.get("title")
     if not title:
         raise HTTPException(status_code=400, detail="Title is required")
-    post = Post(title=title, content=body.get("content"), user_id=current_user.id)
+    # frontends may send either casing; image_url is what goes back out
+    post = Post(
+        title=title,
+        content=body.get("content"),
+        image_url=body.get("image_url", body.get("imageUrl")),
+        user_id=current_user.id,
+    )
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -96,6 +103,10 @@ def update_post(post_id: str, body: dict, current_user: CurrentUser, db: DbSessi
         post.title = body["title"]
     if "content" in body:
         post.content = body["content"]
+    if "image_url" in body:
+        post.image_url = body["image_url"]
+    elif "imageUrl" in body:
+        post.image_url = body["imageUrl"]
     db.commit()
     db.refresh(post)
     return _success("Post updated successfully", {"post": _post_dict(post)})
