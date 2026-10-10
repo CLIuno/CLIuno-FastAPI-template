@@ -40,3 +40,16 @@ a fresh db file** (delete `app.db`), tests use in-memory sqlite.
 
 Conventional commits; tests in `tests/` assert contract shapes — update together with
 any envelope change; ruff must stay clean.
+
+## AI agents (Claude Code and friends)
+
+- **Check the CLIuno skills first**: `npx cliuno@latest skills status` — if any is
+  `missing`/`outdated`, run `npx cliuno@latest skills install` (adds `.claude/skills/cliuno-*`:
+  the generator workflow, the scaffold guide, and the shared REST contract).
+- **Generate resources, don't hand-write them**:
+  `npx cliuno@latest make:resource Product --fields name:string,price:number,inStock:boolean`
+  creates `src/models/product.py`, `src/schemas/product.py`, `src/routers/products.py`, `tests/test_products.py` and registers it in `src/app.py`, following this
+  template's conventions and the `{status, message, data}` contract. `--dry-run` previews,
+  re-running never duplicates registrations, `--force` overwrites.
+- Single pieces: `make:model`, `make:controller`, `make:dto`, `make:validator`, `make:test`. `npx cliuno@latest make` lists them.
+- Then edit fields/business logic only, and run the gates above.
